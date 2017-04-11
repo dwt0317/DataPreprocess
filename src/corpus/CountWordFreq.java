@@ -5,25 +5,43 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+
+/**
+ * @author dwt
+ * 统计KDD训练语料词频并选出前100
+ */
 public class CountWordFreq {
 
 	
 	public static void main(String[] args){
-		countWordFreq();
-		
+		new CountWordFreq().countWordFreq();
 	}
 	
-
+	class CompareWord implements Comparable<CompareWord>{
+		String val;
+		int freq;
+		@Override
+		public int compareTo(CompareWord o) {
+			return freq - o.freq;
+		}
+		
+		public CompareWord(String val, int freq){
+			this.val = val;
+			this.freq = freq;
+		}
+	}
 	
-	public static void countWordFreq(){
-		String filePath = "E:\\Exchange\\computing_ad\\data\\kdd cup 2012 track2\\sample\\mapping\\queryMapping";
+	public HashSet<String> countWordFreq(){
+		HashSet<String> highFreqWords = new HashSet<String>(100);
+		String filePath = Constants.srcDirectory + "sample\\mapping\\queryMapping";
 		File file = new File(filePath);
 		Map<String, Integer> wordFreq = new HashMap<String, Integer>(50000);
-		int k = 50;
-		PriorityQueue<Integer> pq = new PriorityQueue<Integer>(k);
+		int k = 100;
+		PriorityQueue<CompareWord> pq = new PriorityQueue<CompareWord>(k);
 		BufferedReader br;
 		try {
 			br = new BufferedReader(new FileReader(file));
@@ -45,22 +63,23 @@ public class CountWordFreq {
 		for (Map.Entry<String, Integer> entry : wordFreq.entrySet()){
 			Integer i = entry.getValue();
 			if (count < k){
-				pq.add(i);
+				pq.add(new CompareWord(entry.getKey(),i));
 				count++;
 			}else{
-				int v = pq.peek();
-				if (i > v){
+				CompareWord v = pq.peek();
+				if (i > v.freq){
 					pq.poll();
-					pq.add(i);
+					pq.add(new CompareWord(entry.getKey(),i));
 				}
 			}
 		}
 		System.out.println("words size" + wordFreq.size());
 		count = 0;
 		while (!pq.isEmpty()){
-			System.out.print(pq.poll() + " ");
+			highFreqWords.add(pq.poll().val);
 			if (count++ % 10 == 0) 
 				System.out.println();
 		}	
+		return highFreqWords;
 	}
 }
